@@ -1,0 +1,25 @@
+# Exercise 10.1, a possible solution: lesson 10.1's restrictions for the API, the worker and the proxy.
+#   docker compose -f compose.yaml -f compose.hardened.yaml up -d --wait
+x-locked-down: &locked-down
+  read_only: true
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  api:
+    <<: *locked-down
+    tmpfs:
+      - /tmp:size=16m
+
+  worker:
+    <<: *locked-down
+    tmpfs:
+      - /tmp:size=16m
+
+  proxy:
+    <<: *locked-down
+    cap_add: [CHOWN, SETGID, SETUID]
+    tmpfs:
+      - /var/cache/nginx
+      - /run

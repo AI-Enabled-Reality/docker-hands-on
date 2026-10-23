@@ -1,0 +1,94 @@
+# Exercise 10.1: lesson 10.1's stack as project m10x1, proxy on 127.0.0.1:8794. Leave this file as it
+# is; put your changes in compose.hardened.yaml next to it.
+#   docker compose -f module-10/exercises/exercise-1/compose.yaml -f module-10/exercises/exercise-1/compose.hardened.yaml up -d --wait
+name: m10x1
+
+secrets:
+  # The check writes the file if it's missing (.lab/ is ignored by Git).
+  db_password:
+    file: ../../../.lab/m10x1/db_password.txt
+
+configs:
+  proxy_conf:
+    file: ../../../module-08/01-the-stack/nginx.conf
+
+services:
+  db:
+    image: postgres:18.6-trixie
+    environment:
+      POSTGRES_USER: pricing
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: pricing
+    secrets: [db_password]
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "pricing", "-d", "pricing"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+      start_interval: 1s
+
+  migrate:
+    image: postgres:18.6-trixie
+    # psql has no *_FILE convention: read the secret into PGPASSWORD inside the container.
+    entrypoint: ["sh", "-c", 'PGPASSWORD="$$(cat /run/secrets/db_password)" exec sh /migrate.sh']
+    environment:
+      PGHOST: db
+      PGUSER: pricing
+      PGDATABASE: pricing
+    secrets: [db_password]
+    volumes:
+      - ../../../module-08/02-start-order/migrate.sh:/migrate.sh:ro
+      - ../../../app/db/init:/init:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: ../../../app
+    image: brightlane/pricing:0.8
+    environment:
+      PRICING_DATABASE_URL: postgresql://pricing@db:5432/pricing
+      PRICING_DATABASE_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+      start_interval: 1s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    image: brightlane/pricing:0.8
+    command: ["worker"]
+    environment:
+      PRICING_DATABASE_URL: postgresql://pricing@db:5432/pricing
+      PRICING_DATABASE_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes:
+      - exports:/exports
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  proxy:
+    image: nginx:1.30.6-alpine
+    ports:
+      - "127.0.0.1:8794:8080"
+    configs:
+      - source: proxy_conf
+        target: /etc/nginx/nginx.conf
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  exports:

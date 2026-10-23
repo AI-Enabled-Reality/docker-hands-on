@@ -1,0 +1,17 @@
+# Exercise 10.2: answer from the image's SBOM, not by running the image. Versions are strings, exactly
+# as the SBOM writes them.
+
+# The version of FastAPI in the image.
+fastapi = ""
+
+# The version of DuckDB.
+duckdb = ""
+
+# The version of Debian's openssl package.
+debian_openssl = ""
+
+# The version of the OpenSSL library that psycopg-binary's wheel brings with it.
+bundled_openssl = ""
+
+# How many Debian packages the SBOM lists.
+debian_packages = 0

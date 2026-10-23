@@ -1,0 +1,11 @@
+# Exercise 10.2, a possible solution: the answers for the image built on 2026-10-23. A rebuild of the
+# same tag can bring other Debian versions; the check compares with your image's SBOM.
+#   mkdir -p .lab && docker buildx imagetools inspect 127.0.0.1:5001/brightlane/pricing:m10x2 --format '{{json .SBOM}}' > .lab/m10x2-sbom.json
+#   python3 tools/sbom_query.py .lab/m10x2-sbom.json
+#   python3 tools/sbom_query.py .lab/m10x2-sbom.json fastapi duckdb openssl
+
+fastapi = "0.161.1"
+duckdb = "2.0.0"
+debian_openssl = "3.5.7-1~deb13u3"
+bundled_openssl = "1.1.1k"
+debian_packages = 87

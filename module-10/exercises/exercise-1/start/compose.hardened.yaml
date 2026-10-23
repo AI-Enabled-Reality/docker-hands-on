@@ -1,0 +1,16 @@
+# Exercise 10.1: a colleague's first attempt at locking down the pricing stack. It doesn't start, and
+# some of what it does start with is more than the services need.
+services:
+  api:
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]           # "in case it needs a port"
+
+  worker:
+    read_only: true
+    security_opt:
+      - seccomp=unconfined                # "a library complained once"
+
+  proxy:
+    read_only: true
+    cap_drop: [ALL]

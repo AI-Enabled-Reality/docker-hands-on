@@ -96,6 +96,7 @@ Everything binds to `127.0.0.1`, so nothing is reachable from your network.
 | pricing API (published directly) | 8701 | module 2 |
 | pricing database (PostgreSQL, when published) | 5433 | module 3 |
 | lab registry (`docker compose --profile registry up -d --wait`) | 5001 | module 5 |
+| package index with a test certificate (lesson 10.3's session) | 8443 | module 10 |
 
 Port 5000 isn't used: macOS's AirPlay Receiver listens on it.
 
@@ -129,6 +130,19 @@ Port 5000 isn't used: macOS's AirPlay Receiver listens on it.
 
   Lesson 5.3's session and exercise 5.2's check use `LAB_BUILDKIT_IMAGE` when it's set. Keep the
   certificate out of the repository.
+- **Lesson 10.2's scanner can't download its database** (`x509: certificate signed by unknown
+  authority`): Trivy runs in its own container, which doesn't trust your network's certificate
+  authority either. Make a bundle of the usual roots plus that root certificate (`proxy-ca.pem`, as
+  above), outside the repository, and pass it with `LAB_SCANNER_OPTS`:
+
+  ```bash
+  mkdir -p ~/.docker-lab-ca
+  docker run --rm --entrypoint cat python:3.14.9-slim-trixie /etc/ssl/certs/ca-certificates.crt > ~/.docker-lab-ca/bundle.pem
+  cat proxy-ca.pem >> ~/.docker-lab-ca/bundle.pem
+  export LAB_SCANNER_OPTS="-v $HOME/.docker-lab-ca/bundle.pem:/lab-ca.pem:ro -e SSL_CERT_FILE=/lab-ca.pem"
+  ```
+
+  Lesson 10.2's session adds `LAB_SCANNER_OPTS` to every `docker run` of the scanner.
 - **Port 5001 is already allocated:** a lab registry from another lesson or exercise is still
   running. `docker ps --filter name=m05` shows it; `docker rm -f -v <name>` removes it, and
   `docker compose --profile registry down` stops the Compose one.
@@ -152,6 +166,8 @@ Tested on 2026-10-23 on an Apple Silicon Mac (macOS 27):
 | PostgreSQL | 18.6 (`postgres:18.6-trixie`) |
 | Alpine (small helper image) | 3.24.3 |
 | Registry | 3.1.2 |
+| uv (`ghcr.io/astral-sh/uv`) | 0.13.5 |
+| Trivy (`aquasec/trivy`, lesson 10.2) | 0.76.1 |
 | pytest (host-side checks) | 9.1.1 |
 
 ## 9. Layout
