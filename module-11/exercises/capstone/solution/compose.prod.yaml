@@ -1,0 +1,73 @@
+# Capstone, a possible solution: the motorway migration and everything a server needs, in one file.
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
+
+# Rotated logs for every service (lesson 9.2), and least privilege for the pricing code (lesson 10.1).
+x-logging: &logging
+  logging:
+    driver: local
+    options:
+      max-size: 10m
+      max-file: "3"
+
+x-locked-down: &locked-down
+  read_only: true
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /tmp:size=16m
+
+services:
+  db:
+    <<: *logging
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  migrate:
+    <<: *logging
+    volumes:
+      - ./motorway.sql:/migrations/2026-11-02-motorway.sql:ro
+
+  api:
+    <<: [*logging, *locked-down]
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256m
+
+  worker:
+    <<: [*logging, *locked-down]
+    restart: unless-stopped
+    stop_grace_period: 60s        # finish the current statement before exiting (lesson 3.2)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; from pricing import db; sys.exit(db.ping() != 'ok')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+      start_interval: 2s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256m
+
+  proxy:
+    <<: *logging
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+      start_interval: 1s
+    deploy:
+      resources:
+        limits:
+          memory: 64m

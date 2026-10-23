@@ -1,0 +1,14 @@
+# Lesson 11.1: json-file with rotation. Small sizes, so the lab sees files rotate after a few thousand
+# requests; a server would keep more (lesson 9.2's production file: local, 10m × 3).
+x-rotated: &rotated
+  driver: json-file
+  options:
+    max-size: 256k
+    max-file: "3"
+
+services:
+  api:
+    logging: *rotated
+
+  proxy:
+    logging: *rotated

@@ -1,0 +1,44 @@
+# Lesson 11.2: the stack a contractor delivered for the motorway go-live. It works: quotes come back
+# through the proxy. Whether it's ready for production is another question.
+#   docker compose -f module-11/02-readiness/contractor/compose.yaml up -d --build
+name: m11l02-contractor
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: pricing
+      POSTGRES_PASSWORD: pricing-lab-only
+      POSTGRES_DB: pricing
+    ports:
+      - "127.0.0.1:5433:5432"             # "handy for debugging"
+    volumes:
+      - ../../../app/db/init:/docker-entrypoint-initdb.d:ro
+
+  api:
+    build: ../../../app
+    image: brightlane/pricing:latest
+    environment:
+      PRICING_DATABASE_URL: postgresql://pricing@db:5432/pricing
+      PRICING_DATABASE_PASSWORD: pricing-lab-only
+    ports:
+      - "127.0.0.1:8701:8000"
+    restart: always
+    depends_on: [db]
+
+  worker:
+    image: brightlane/pricing:latest
+    command: ["worker"]
+    environment:
+      PRICING_DATABASE_URL: postgresql://pricing@db:5432/pricing
+      PRICING_DATABASE_PASSWORD: pricing-lab-only
+    restart: always
+    depends_on: [db]
+
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:8700:8080"
+    volumes:
+      - ../../../module-08/01-the-stack/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [api]

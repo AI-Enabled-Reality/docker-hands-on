@@ -1,0 +1,12 @@
+# Lesson 11.1: limits and reservations for the API.
+services:
+  api:
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 256M
+          pids: 64            # processes and threads together
+        reservations:
+          cpus: "0.25"
+          memory: 128M

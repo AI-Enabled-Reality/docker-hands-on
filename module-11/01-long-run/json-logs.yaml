@@ -1,0 +1,5 @@
+# Lesson 11.1: the pricing service writes one JSON object per line, for a log collector.
+services:
+  api:
+    environment:
+      PRICING_LOG_FORMAT: json

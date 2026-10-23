@@ -1,0 +1,10 @@
+# Lesson 11.1: what a Linux server does by default. Docker Engine's default driver is json-file, with
+# no size limit: the log file grows for as long as the container exists.
+services:
+  api:
+    logging:
+      driver: json-file
+
+  proxy:
+    logging:
+      driver: json-file

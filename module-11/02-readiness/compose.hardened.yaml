@@ -1,0 +1,27 @@
+# Lesson 11.2: lesson 10.1's file, unchanged: least privilege for the pricing code and the proxy.
+#   docker compose -f compose.yaml -f compose.hardened.yaml up -d --wait
+x-locked-down: &locked-down
+  read_only: true                       # the image's files can't change; only mounts and tmpfs are writable
+  cap_drop: [ALL]                       # no Linux capabilities, not even in the bounding set
+  security_opt:
+    - no-new-privileges:true            # no setuid program can gain privileges
+
+services:
+  api:
+    <<: *locked-down
+    tmpfs:
+      - /tmp:size=16m
+
+  worker:
+    <<: *locked-down
+    tmpfs:
+      - /tmp:size=16m
+
+  proxy:
+    <<: *locked-down
+    # The master process starts as root, creates its cache folders and switches its workers to the
+    # nginx user: exactly these three capabilities, found from its error messages.
+    cap_add: [CHOWN, SETGID, SETUID]
+    tmpfs:
+      - /var/cache/nginx
+      - /run

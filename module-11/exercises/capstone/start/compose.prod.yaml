@@ -1,0 +1,13 @@
+# Capstone: your production file for the motorway release. Copy it next to compose.yaml and fill it
+# in. It's merged over compose.yaml with -f, so it only needs what changes:
+#
+# - the motorway migration: mount motorway.sql into the migrate job under /migrations/
+# - for every long-running service: a restart policy, a memory limit, rotated logs, a healthcheck
+#   (the worker and the proxy have none yet)
+# - for the API and the worker: a read-only root filesystem with tmpfs where needed, no capabilities,
+#   no-new-privileges
+# - for the worker: enough time to finish a month's statement when the stack stops
+#
+# Check it as you go: python3 tools/readiness.py m11x1
+
+services: {}

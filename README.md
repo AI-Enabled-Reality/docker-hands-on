@@ -16,6 +16,9 @@ automated checks.
 - **Disk:** about 6 GB for images and build cache.
 - **Python 3.11 or later** on your Mac, for the exercise checks (they use pytest) and lesson 2.2.
 - **Git**, to clone this repository.
+- **For lesson 11.3 only:** a GitHub account, your own copy of this repository on GitHub (a fork, with
+  Actions enabled), and the GitHub CLI (`brew install gh`, then `gh auth login` with the `workflow`
+  scope).
 
 ## 2. Set up once
 
@@ -97,6 +100,7 @@ Everything binds to `127.0.0.1`, so nothing is reachable from your network.
 | pricing database (PostgreSQL, when published) | 5433 | module 3 |
 | lab registry (`docker compose --profile registry up -d --wait`) | 5001 | module 5 |
 | package index with a test certificate (lesson 10.3's session) | 8443 | module 10 |
+| the capstone's proxy (project `m11x1`) | 8795 | module 11 |
 
 Port 5000 isn't used: macOS's AirPlay Receiver listens on it.
 

@@ -1,0 +1,95 @@
+# Capstone: the pricing stack as project m11x1, proxy on 127.0.0.1:8795, running the release
+# 127.0.0.1:5001/brightlane/pricing:1.4.0 from the lab registry. Leave this file as it is: your
+# production settings and the motorway migration go into compose.prod.yaml next to it.
+#   docker compose -f module-11/exercises/capstone/compose.yaml -f module-11/exercises/capstone/compose.prod.yaml up -d --wait
+name: m11x1
+
+secrets:
+  # The check writes the file if it's missing (.lab/ is ignored by Git).
+  db_password:
+    file: ../../../.lab/m11x1/db_password.txt
+
+configs:
+  proxy_conf:
+    file: ../../../module-08/01-the-stack/nginx.conf
+
+services:
+  db:
+    image: postgres:18.6-trixie
+    environment:
+      POSTGRES_USER: pricing
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: pricing
+    secrets: [db_password]
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "pricing", "-d", "pricing"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+      start_interval: 1s
+
+  migrate:
+    image: postgres:18.6-trixie
+    # psql has no *_FILE convention: read the secret into PGPASSWORD inside the container.
+    entrypoint: ["sh", "-c", 'PGPASSWORD="$$(cat /run/secrets/db_password)" exec sh /migrate.sh']
+    environment:
+      PGHOST: db
+      PGUSER: pricing
+      PGDATABASE: pricing
+    secrets: [db_password]
+    volumes:
+      - ./migrate.sh:/migrate.sh:ro
+      - ../../../app/db/init:/init:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: 127.0.0.1:5001/brightlane/pricing:1.4.0
+    environment:
+      PRICING_DATABASE_URL: postgresql://pricing@db:5432/pricing
+      PRICING_DATABASE_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+      start_interval: 1s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    image: 127.0.0.1:5001/brightlane/pricing:1.4.0
+    # With all 60 motorway sites, a month's statement is about 25 times today's. --pace stands in for
+    # that volume in the lab: a month for every site takes about 7 seconds instead of 0.4.
+    command: ["worker", "--pace", "0.1"]
+    environment:
+      PRICING_DATABASE_URL: postgresql://pricing@db:5432/pricing
+      PRICING_DATABASE_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes:
+      - exports:/exports
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  proxy:
+    image: nginx:1.30.6-alpine
+    ports:
+      - "127.0.0.1:8795:8080"
+    configs:
+      - source: proxy_conf
+        target: /etc/nginx/nginx.conf
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  exports:
