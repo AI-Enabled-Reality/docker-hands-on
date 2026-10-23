@@ -1,0 +1,50 @@
+# Lesson 9.2: what a server adds to compose.yaml. Merged with -f, never by default:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
+
+# One logging setup for every service: Docker's local driver, rotated (lesson 3.1 showed the default).
+x-logging: &logging
+  logging:
+    driver: local
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  db:
+    <<: *logging
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  migrate:
+    <<: *logging
+
+  api:
+    <<: *logging
+    build: !reset null            # a server runs the image CI built and pushed (module 11)
+    image: brightlane/pricing:0.8
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256m
+
+  worker:
+    <<: *logging
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256m           # lesson 3.3: a month's statement needs a 158 MiB peak
+
+  proxy:
+    <<: *logging
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64m

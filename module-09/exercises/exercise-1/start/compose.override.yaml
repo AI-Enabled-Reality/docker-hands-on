@@ -1,0 +1,9 @@
+# Exercise 9.1: a first attempt at a development setup. Copy this file one folder up, next to
+# compose.yaml, and rewrite it: the API should pick up code edits in seconds without a rebuild,
+# and rebuild when the dependencies change. Publish the API itself on 127.0.0.1:8791.
+services:
+  api:
+    ports:
+      - "127.0.0.1:8791:8000"
+    volumes:
+      - ../../../app:/app

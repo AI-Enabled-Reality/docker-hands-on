@@ -1,0 +1,4 @@
+# Lesson 9.3, the second break: the proxy with nginx.static.conf instead of the shared configuration.
+configs:
+  proxy_conf:
+    file: ./nginx.static.conf

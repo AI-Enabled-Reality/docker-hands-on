@@ -1,0 +1,18 @@
+# Exercise 9.1, a possible solution: lesson 9.1's development settings for project m09x1.
+services:
+  api:
+    build:
+      context: ../../../app
+      dockerfile: Dockerfile.dev
+    image: brightlane/pricing:m09x1-dev
+    ports:
+      - "127.0.0.1:8791:8000"
+    develop:
+      watch:
+        - action: sync
+          path: ../../../app/src
+          target: /app/src
+        - action: rebuild
+          path: ../../../app/uv.lock
+        - action: rebuild
+          path: ../../../app/pyproject.toml

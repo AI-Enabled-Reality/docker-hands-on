@@ -1,0 +1,24 @@
+# Lesson 9.1: development settings. docker compose merges this file over compose.yaml automatically,
+# because of its name; docker compose -f compose.yaml ... leaves it out.
+services:
+  api:
+    build:
+      context: ../../app
+      dockerfile: Dockerfile.dev
+    image: brightlane/pricing:dev
+    environment:
+      PRICING_ENVIRONMENT: lab
+      PRICING_LOG_FORMAT: text
+    ports:
+      - "127.0.0.1:8701:8000"   # straight to the API, for curl and a debugger
+    develop:
+      watch:
+        # A code change: copy the file into the container; uvicorn --reload restarts the API.
+        - action: sync
+          path: ../../app/src
+          target: /app/src
+        # A dependency change: build the image again and replace the container.
+        - action: rebuild
+          path: ../../app/uv.lock
+        - action: rebuild
+          path: ../../app/pyproject.toml

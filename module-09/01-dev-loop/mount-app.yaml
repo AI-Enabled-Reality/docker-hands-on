@@ -1,0 +1,6 @@
+# Lesson 9.1, the break: the classic way to get live code, a bind mount of the whole project.
+#   docker compose -f compose.yaml -f compose.override.yaml -f mount-app.yaml up -d api
+services:
+  api:
+    volumes:
+      - ../../app:/app

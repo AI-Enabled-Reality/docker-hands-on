@@ -1,0 +1,5 @@
+# Lesson 9.3, the first break: the API published on a fixed host port, as in module 6.
+services:
+  api:
+    ports:
+      - "127.0.0.1:8701:8000"
