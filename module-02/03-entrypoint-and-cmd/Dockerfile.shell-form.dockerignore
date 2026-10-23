@@ -1,0 +1,21 @@
+# What the pricing image never needs. BuildKit reads this file because it sits next to the
+# Dockerfile and is named after it; a plain .dockerignore at the root of the context works too.
+
+# Local environments: built for your Mac, useless (and broken) in a Linux image.
+.venv/
+venv/
+
+# Secrets and local settings.
+.env
+.env.*
+
+# Caches, test output and exports.
+**/__pycache__/
+.pytest_cache/
+exports/
+*.parquet
+
+# Not needed to run the app.
+tests/
+.git/
+.DS_Store

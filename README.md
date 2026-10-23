@@ -14,7 +14,7 @@ automated checks.
 - **Memory for Docker: 4 GB or more** (Docker Desktop → Settings → Resources → Memory). The whole
   lab uses less than 1 GB while it runs; builds need more for a minute.
 - **Disk:** about 6 GB for images and build cache.
-- **Python 3.11 or later** on your Mac, only for the exercise checks (they use pytest).
+- **Python 3.11 or later** on your Mac, for the exercise checks (they use pytest) and lesson 2.2.
 - **Git**, to clone this repository.
 
 ## 2. Set up once
@@ -127,6 +127,7 @@ Tested on 2026-10-23 on an Apple Silicon Mac (macOS 27):
 | Docker Buildx / BuildKit | 0.38.1 / 0.34.0 |
 | containerd / runc | 2.4.2 / 1.5.2 |
 | Python (in the images) | 3.14.9 (`python:3.14.9-slim-trixie`) |
+| The app's packages | FastAPI 0.161.1, Uvicorn 0.54.0, psycopg 3.3.6, pydantic-settings 2.16.1, DuckDB 2.0.0 (all in `app/uv.lock`) |
 | PostgreSQL | 18.6 (`postgres:18.6-trixie`) |
 | Alpine (small helper image) | 3.24.3 |
 | Registry | 3.1.2 |
@@ -136,6 +137,7 @@ Tested on 2026-10-23 on an Apple Silicon Mac (macOS 27):
 
 | Path | What it holds |
 |---|---|
+| `app/` | Brightlane's pricing service: the code you containerize (`src/pricing/`), its tests, `pyproject.toml` and `uv.lock`, and the database's schema and seed (`db/init/`) |
 | `module-NN/` | the practicals (`NN-<lesson>.sh`), each lesson's files, and `exercises/` |
 | `common/` | small Python helpers the exercise checks use |
 | `tools/` | `reset.sh` and helpers some lessons start |

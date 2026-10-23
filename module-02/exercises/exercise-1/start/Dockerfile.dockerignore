@@ -1,0 +1,3 @@
+# Exercise 2.1: everything the image must not contain, one pattern per line.
+# TODO: the local virtual environment, the .env file, caches, and anything else
+# the API doesn't need at run time.

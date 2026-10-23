@@ -7,7 +7,10 @@ import json
 import re
 import shutil
 import subprocess
+import time
 import tomllib
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -54,6 +57,34 @@ def load_answers(path):
         pytest.fail(f"{path.relative_to(REPO)} is missing. Copy it from start/ and fill it in.")
     with path.open("rb") as f:
         return tomllib.load(f)
+
+
+def build(dockerfile, tag, context="app", timeout=600):
+    """Build an image the way the lessons do, from the repository root."""
+    result = subprocess.run(["docker", "build", "-q", "-f", str(dockerfile), "-t", tag, str(REPO / context)],
+                            capture_output=True, text=True, timeout=timeout, cwd=REPO)
+    if result.returncode != 0:
+        pytest.fail(f"The build failed:\n{result.stderr.strip()[-2000:]}")
+
+
+def run(*args, timeout=120):
+    """`docker run --rm <args>`: (exit code, stdout + stderr)."""
+    result = subprocess.run(["docker", "run", "--rm", *args], capture_output=True, text=True, timeout=timeout)
+    return result.returncode, result.stdout + result.stderr
+
+
+def wait_http(url, timeout=30):
+    """GET url until it answers 200; return the body, or fail after timeout seconds."""
+    deadline = time.monotonic() + timeout
+    last = None
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=3) as response:
+                return response.read().decode()
+        except (urllib.error.URLError, ConnectionError, OSError) as error:
+            last = error
+            time.sleep(0.5)
+    pytest.fail(f"{url} didn't answer within {timeout} s (last error: {last})")
 
 
 UNITS = {"B": 1, "kB": 1e3, "KB": 1e3, "MB": 1e6, "GB": 1e9, "KiB": 2**10, "MiB": 2**20, "GiB": 2**30}

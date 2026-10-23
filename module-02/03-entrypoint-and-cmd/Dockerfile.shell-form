@@ -1,0 +1,9 @@
+# syntax=docker/dockerfile:1
+# Lesson 2.3, break it: the same image with ENTRYPOINT in shell form.
+#   docker build -f module-02/03-entrypoint-and-cmd/Dockerfile.shell-form -t brightlane/pricing:0.3-shell app
+FROM python:3.14.9-slim-trixie
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir .
+EXPOSE 8000
+ENTRYPOINT pricing api
