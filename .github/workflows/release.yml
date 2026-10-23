@@ -1,0 +1,105 @@
+# Lesson 11.3: test the pricing service, then build its image for both platforms and publish it to
+# GitHub's container registry with an SBOM and provenance.
+#   a tag v1.4.0          -> ghcr.io/<owner>/brightlane-pricing:1.4.0 and :sha-<commit>
+#   Run workflow (by hand) -> ghcr.io/<owner>/brightlane-pricing:<branch> and :sha-<commit>
+# The job summary names the digest to deploy.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# GITHUB_TOKEN gets exactly these permissions, and no others.
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Unit tests, in the image's Python
+        run: |
+          docker run --rm -v "$PWD/app:/app" -w /app -e UV_PROJECT_ENVIRONMENT=/tmp/venv \
+            --entrypoint sh python:3.14.9-slim-trixie \
+            -c 'pip install -q uv==0.13.5 && uv sync --locked -q && uv run --no-sync pytest -q'
+
+  release:
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tags and OCI labels from git: the version from a v* tag, the branch name, the commit.
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/brightlane-pricing
+          tags: |
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=sha
+
+      # The runner's own platform first, loaded into its Docker, to start it before publishing anything.
+      - name: Build for the runner
+        uses: docker/build-push-action@v7
+        with:
+          context: app
+          load: true
+          tags: brightlane/pricing:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start the image and check it answers
+        run: |
+          docker run --rm brightlane/pricing:ci version
+          docker run -d --name smoke -p 127.0.0.1:8000:8000 brightlane/pricing:ci
+          for _ in $(seq 30); do curl -sf http://127.0.0.1:8000/health/live && break; sleep 1; done
+          echo
+          docker inspect -f 'user {{.Config.User}}, health endpoint answered' smoke
+          docker rm -f smoke
+
+      - name: Build both platforms and push, with SBOM and provenance
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: app
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          sbom: true
+          provenance: mode=max
+
+      - name: What was published
+        env:
+          IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          repo="${IMAGE%:*}"
+          docker buildx imagetools inspect "$repo@$DIGEST" --format '{{range .Manifest.Manifests}}{{.Platform.OS}}/{{.Platform.Architecture}} {{.Digest}}{{println}}{{end}}' | tee manifests.txt
+          {
+            echo "### Deploy by digest"
+            echo '```'
+            echo "$repo@$DIGEST"
+            echo '```'
+            echo "Tags: $(echo '${{ steps.meta.outputs.tags }}' | tr '\n' ' ')"
+            echo '```'
+            cat manifests.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
