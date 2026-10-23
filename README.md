@@ -111,6 +111,27 @@ Port 5000 isn't used: macOS's AirPlay Receiver listens on it.
 - **Pulls or builds fail with certificate errors** (`x509: certificate signed by unknown
   authority`, `UnknownIssuer`): your network intercepts TLS. Lesson 10.3 shows the fix; until
   then, try another network.
+- **Only lesson 5.3's own builder fails with certificate errors:** a `docker-container` builder
+  runs BuildKit in its own container, which doesn't trust the certificate authority your Mac and
+  Docker Desktop trust. Export that root certificate as `proxy-ca.pem` (Keychain Access, or ask
+  your IT team), put it in an empty folder with this `Dockerfile`, and build it:
+
+  ```dockerfile
+  FROM moby/buildkit:v0.34.1
+  COPY proxy-ca.pem /usr/local/share/ca-certificates/proxy-ca.crt
+  RUN cat /usr/local/share/ca-certificates/proxy-ca.crt >> /etc/ssl/certs/ca-certificates.crt
+  ```
+
+  ```bash
+  docker build -t local/buildkit-with-proxy-ca:v0.34.1 <that folder>
+  export LAB_BUILDKIT_IMAGE=local/buildkit-with-proxy-ca:v0.34.1
+  ```
+
+  Lesson 5.3's session and exercise 5.2's check use `LAB_BUILDKIT_IMAGE` when it's set. Keep the
+  certificate out of the repository.
+- **Port 5001 is already allocated:** a lab registry from another lesson or exercise is still
+  running. `docker ps --filter name=m05` shows it; `docker rm -f -v <name>` removes it, and
+  `docker compose --profile registry down` stops the Compose one.
 - **Out of disk space:** `docker system df` shows what uses it; module 5 shows how to clean up.
 - **Docker Desktop is slow or containers are killed:** give the VM more memory in Settings →
   Resources.
@@ -124,7 +145,7 @@ Tested on 2026-10-23 on an Apple Silicon Mac (macOS 27):
 | Docker Desktop | 4.96.3 |
 | Docker Engine | 29.9.2 |
 | Docker Compose | 5.6.1 |
-| Docker Buildx / BuildKit | 0.38.1 / 0.34.0 |
+| Docker Buildx / BuildKit | 0.38.1 / 0.34.0 (in Docker Desktop), 0.34.1 (`moby/buildkit`, lesson 5.3) |
 | containerd / runc | 2.4.2 / 1.5.2 |
 | Python (in the images) | 3.14.9 (`python:3.14.9-slim-trixie`) |
 | The app's packages | FastAPI 0.161.1, Uvicorn 0.54.0, psycopg 3.3.6, pydantic-settings 2.16.1, DuckDB 2.0.0 (all in `app/uv.lock`) |

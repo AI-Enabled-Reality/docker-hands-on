@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+# Lesson 5.3: what a multi-platform build tells each stage.
+#   docker build --platform linux/arm64,linux/amd64 -f module-05/03-platforms/Dockerfile.platforms --progress=plain module-05/03-platforms
+# FROM --platform=$BUILDPLATFORM runs this stage natively, whatever the target: the way to
+# cross-compile without emulation.
+FROM --platform=$BUILDPLATFORM alpine:3.24.3
+ARG BUILDPLATFORM TARGETPLATFORM TARGETARCH
+RUN echo "built on $BUILDPLATFORM for $TARGETPLATFORM (TARGETARCH=$TARGETARCH)"

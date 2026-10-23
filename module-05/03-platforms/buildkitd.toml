@@ -1,0 +1,4 @@
+# Lesson 5.3: settings for the lab's own BuildKit builder.
+# The lab registry speaks plain HTTP on 127.0.0.1:5001; tell BuildKit that's expected (lab only).
+[registry."127.0.0.1:5001"]
+  http = true

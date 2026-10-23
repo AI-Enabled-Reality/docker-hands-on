@@ -2,7 +2,8 @@
 # Remove what this course's practicals and exercises created, and nothing else:
 #   containers, volumes and networks named mNNlNN-* (lessons) or mNNxN-* (exercises),
 #   the Compose projects "brightlane" and "docker-hands-on-lab",
-#   and the images brightlane/* and mNNlNN-* / mNNxN-*.
+#   the images brightlane/* (also as 127.0.0.1:5001/brightlane/*) and mNNlNN-* / mNNxN-*,
+#   and buildx builders named mNNlNN-* / mNNxN-*.
 # Other projects' containers and images are never touched.
 #
 #   bash tools/reset.sh
@@ -23,7 +24,13 @@ vols=$(docker volume ls -q | grep -E "${pattern}" || true)
 nets=$(docker network ls --format '{{.Name}}' | grep -E "${pattern}" || true)
 [ -n "$nets" ] && docker network rm $nets >/dev/null && echo "removed $(echo $nets | wc -w | tr -d ' ') networks"
 
-imgs=$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E "^brightlane/|${pattern}" || true)
+# Images by name; one pulled by digest only has no tag, so it's removed by name@digest.
+imgs=$(docker image ls --format '{{.Repository}}|{{.Tag}}|{{.Digest}}' \
+  | awk -F'|' -v p="${pattern}" '$1 ~ "^(127[.]0[.]0[.]1:5001/)?brightlane/" || $1 ~ p {print ($2 == "<none>" ? $1 "@" $3 : $1 ":" $2)}')
 [ -n "$imgs" ] && docker image rm $imgs >/dev/null && echo "removed $(echo $imgs | wc -w | tr -d ' ') images"
+
+builders=$(docker buildx ls --format '{{.Name}}' 2>/dev/null | grep -E "${pattern}" || true)
+for builder in $builders; do docker buildx rm "$builder" >/dev/null; done
+[ -n "$builders" ] && echo "removed $(echo $builders | wc -w | tr -d ' ') builders"
 
 echo "reset done"

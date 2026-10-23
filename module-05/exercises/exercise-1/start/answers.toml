@@ -1,0 +1,9 @@
+# Exercise 5.1: Pin it. Fill in both values, then deploy with the first one.
+
+# The reference you deploy: the lab registry's pricing image, pinned by the digest of what 1.0.0 is now.
+# Format: 127.0.0.1:5001/brightlane/pricing@sha256:<64 hex characters>
+image = ""
+
+# The digest of the manifest inside that index for your Mac's platform (linux/arm64 on Apple Silicon,
+# linux/amd64 on an Intel Mac). Format: sha256:<64 hex characters>
+manifest = ""
