@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Written by the practicals and exercises
+exports/
+backups/
+*.db
+*.duckdb
+*.parquet
+logs/
+answers.local.toml
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+secrets/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
+
+# Exercise answers (your own work)
+module-*/exercises/*/answers.toml

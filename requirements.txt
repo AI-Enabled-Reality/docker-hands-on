@@ -1,0 +1,3 @@
+# Host-side only: the exercise checks run with pytest on your Mac.
+# Everything else in the course runs in containers.
+pytest==9.1.1

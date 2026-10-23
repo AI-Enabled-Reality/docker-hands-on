@@ -1,0 +1,25 @@
+# Lab support services for Docker, Hands-On.
+# The pricing stack itself is built step by step in the modules (module-08 onwards);
+# this file only holds helpers that several modules share. Start one by its profile:
+#   docker compose --profile registry up -d --wait
+name: docker-hands-on-lab
+
+services:
+  # A self-hosted image registry on 127.0.0.1:5001 (modules 5, 10, 11). Port 5000 is
+  # taken by macOS's AirPlay Receiver, so the lab publishes 5001. Lab only: no TLS, no login.
+  registry:
+    image: registry:3.1.2
+    profiles: ["registry"]
+    ports:
+      - "127.0.0.1:5001:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:5000/v2/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 128m
+
+volumes:
+  registry-data:
