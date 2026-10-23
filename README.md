@@ -158,7 +158,7 @@ Tested on 2026-10-23 on an Apple Silicon Mac (macOS 27):
 
 | Path | What it holds |
 |---|---|
-| `app/` | Brightlane's pricing service: the code you containerize (`src/pricing/`), its tests, `pyproject.toml` and `uv.lock`, and the database's schema and seed (`db/init/`) |
+| `app/` | Brightlane's pricing service: the code you containerize (`src/pricing/`), its tests, `pyproject.toml` and `uv.lock`, the database's schema and seed (`db/init/`), and from module 8 its `Dockerfile` |
 | `module-NN/` | the practicals (`NN-<lesson>.sh`), each lesson's files, and `exercises/` |
 | `common/` | small Python helpers the exercise checks use |
 | `tools/` | `reset.sh` and helpers some lessons start |
