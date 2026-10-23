@@ -27,3 +27,6 @@ secrets/
 
 # Exercise answers (your own work)
 module-*/exercises/*/answers.toml
+
+# Scratch copies the practicals make and change
+.lab/

@@ -1,0 +1,11 @@
+# syntax=docker/dockerfile:1
+# Lesson 4.1: everything copied first, then installed. Any change to any file reinstalls everything.
+#   docker build -f module-04/01-build-cache/Dockerfile.copy-first -t brightlane/pricing:0.4-copy-first .lab/m04-app
+FROM python:3.14.9-slim-trixie
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --no-deps .
+EXPOSE 8000
+ENTRYPOINT ["pricing"]
+CMD ["api"]

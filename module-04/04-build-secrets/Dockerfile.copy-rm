@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+# Lesson 4.4: the token copied in as a file, used, then deleted. Don't do this either.
+#   docker build -f module-04/04-build-secrets/Dockerfile.copy-rm --build-context scripts=module-04/04-build-secrets \
+#     -t brightlane/pricing:0.6-copy-rm .lab/m04l04
+FROM brightlane/pricing:0.5
+COPY rulebook-token.txt /tmp/rulebook-token
+RUN --mount=type=bind,from=scripts,source=fetch_rulebook.py,target=/tmp/fetch_rulebook.py \
+    python /tmp/fetch_rulebook.py /tmp/rulebook-token && rm /tmp/rulebook-token

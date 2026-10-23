@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1
+# Lesson 4.1: the dependencies first, the code last.
+#   docker build -f module-04/01-build-cache/Dockerfile.deps-first -t brightlane/pricing:0.4 .lab/m04-app
+FROM python:3.14.9-slim-trixie
+WORKDIR /app
+# Only the pinned dependency list: this layer changes when the dependencies do, not the code.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# Then the code, which changes every day. --no-deps: the dependencies are already installed.
+COPY . .
+RUN pip install --no-cache-dir --no-deps .
+EXPOSE 8000
+ENTRYPOINT ["pricing"]
+CMD ["api"]

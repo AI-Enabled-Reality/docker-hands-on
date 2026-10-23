@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+# Lesson 4.4: the token as a build argument. Don't do this.
+#   docker build -f module-04/04-build-secrets/Dockerfile.arg --build-context scripts=module-04/04-build-secrets \
+#     --build-arg RULEBOOK_TOKEN="$(cat .lab/m04l04/rulebook-token.txt)" -t brightlane/pricing:0.6-arg .lab/m04l04
+FROM brightlane/pricing:0.5
+ARG RULEBOOK_TOKEN
+RUN --mount=type=bind,from=scripts,source=fetch_rulebook.py,target=/tmp/fetch_rulebook.py \
+    python /tmp/fetch_rulebook.py
