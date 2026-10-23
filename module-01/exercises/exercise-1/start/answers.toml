@@ -1,0 +1,20 @@
+# Exercise 1.1: fill in what you find about the container m01x1-db.
+# Check from the repository root:  python -m pytest module-01/exercises/exercise-1
+
+# The PID of the database's main process as the Linux VM sees it.
+vm_pid = 0
+
+# The PID of that same process inside the container.
+container_pid = 0
+
+# The container's hostname.
+hostname = ""
+
+# The memory limit in bytes, as the kernel stores it (the cgroup file memory.max).
+memory_max = 0
+
+# The CPU limit as the kernel stores it (the cgroup file cpu.max), e.g. "50000 100000".
+cpu_max = ""
+
+# Does the database's process share the VM's user namespace? true or false.
+shares_user_namespace = false

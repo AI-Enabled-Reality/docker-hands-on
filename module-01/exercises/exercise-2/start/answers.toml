@@ -1,0 +1,18 @@
+# Exercise 1.2: what do Tomasz's two containers cost on disk?
+# Sizes in MB as docker prints them (decimal: 1 MB = 1,000,000 bytes); within 10 % is fine.
+# Check from the repository root:  python -m pytest module-01/exercises/exercise-2
+
+# Size of m01x2-export's writable layer.
+export_writable_mb = 0.0
+
+# Size of m01x2-trim's writable layer.
+trim_writable_mb = 0.0
+
+# The image's unpacked size that both containers share (it's counted once on disk).
+shared_image_mb = 0.0
+
+# The letter `docker diff` shows for /usr/local/lib/python3.14/ensurepip in m01x2-trim.
+ensurepip_letter = ""
+
+# Did deleting ensurepip make m01x2-trim's writable layer smaller than an untouched container's? true or false.
+deleting_saved_space = true
