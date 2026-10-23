@@ -1,0 +1,19 @@
+# Exercise 3.2: why did each container stop?
+# For cause, use one of: "out-of-memory", "program-not-found", "app-error".
+# Check from the repository root:  python -m pytest module-03/exercises/exercise-2
+
+[m03x2-a]
+exit_code = 0
+cause = ""
+
+[m03x2-b]
+exit_code = 0
+cause = ""
+# The container's state: "created", "running" or "exited".
+state = ""
+
+[m03x2-c]
+exit_code = 0
+cause = ""
+# The last line the program logged, as docker logs shows it (without the timestamp is fine).
+last_log_line = ""

@@ -1,0 +1,9 @@
+# syntax=docker/dockerfile:1
+# Lesson 3.2: the pricing image, started through an entrypoint script.
+#   docker build -f module-03/02-signals/Dockerfile.wrapper -t brightlane/pricing:0.3-wrapper app
+FROM python:3.14.9-slim-trixie
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir .
+COPY --from=scripts --chmod=755 start-worker.sh /usr/local/bin/start-worker.sh
+ENTRYPOINT ["start-worker.sh"]
